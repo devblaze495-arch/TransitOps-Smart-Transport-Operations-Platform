@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, 
@@ -19,16 +20,17 @@ import { cn } from '../../lib/utils';
 interface NavItem {
   label: string;
   icon: React.ElementType;
+  path?: string;
   children?: NavItem[];
 }
 
 const navItems: NavItem[] = [
-  { label: 'Dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
   { 
     label: 'Fleet', 
     icon: Car,
     children: [
-      { label: 'Vehicles', icon: Car },
+      { label: 'Vehicles', icon: Car, path: '/vehicles' },
       { label: 'Drivers', icon: Users },
     ]
   },
@@ -62,6 +64,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed, isMobile, isOpen, onToggle, onClose }: SidebarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isHoverExpanded, setIsHoverExpanded] = useState(false);
   const isExpanded = !isCollapsed || isHoverExpanded;
@@ -81,32 +85,44 @@ export function Sidebar({ isCollapsed, isMobile, isOpen, onToggle, onClose }: Si
   const renderNavItem = (item: NavItem, level: number = 0) => {
     const Icon = item.icon;
     const hasChildren = item.children && item.children.length > 0;
-    const isExpanded = expandedItems.has(item.label);
+    const isItemExpanded = expandedItems.has(item.label);
+    const showLabel = isExpanded || isMobile;
+    const isDisabled = level > 0 && !hasChildren && !item.path;
+    const isActive = item.path ? location.pathname === item.path : false;
 
     return (
       <div key={item.label}>
         <button
+          type="button"
           onClick={() => {
+            if (item.path) {
+              navigate(item.path);
+              if (isMobile) onClose();
+              return;
+            }
             if (hasChildren) {
               toggleExpanded(item.label);
             }
           }}
+          disabled={isDisabled}
           className={cn(
-            'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors',
+            'w-full flex items-center gap-3 rounded-lg transition-colors',
             'hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary/50',
             'text-text-secondary hover:text-text-primary',
-            !isExpanded && !isMobile && 'justify-center px-3'
+            isActive && 'bg-primary/10 text-primary',
+            !showLabel && 'justify-center px-3',
+            isDisabled && 'cursor-not-allowed opacity-70'
           )}
         >
           <Icon className="w-5 h-5 flex-shrink-0" />
-          {(isExpanded || isMobile) && (
+          {showLabel && (
             <>
               <span className="flex-1 text-left text-sm font-medium">{item.label}</span>
               {hasChildren && (
                 <ChevronRight 
                   className={cn(
                     'w-4 h-4 transition-transform',
-                    isExpanded && 'rotate-90'
+                    isItemExpanded && 'rotate-90'
                   )}
                 />
               )}
@@ -114,9 +130,9 @@ export function Sidebar({ isCollapsed, isMobile, isOpen, onToggle, onClose }: Si
           )}
         </button>
         
-        {hasChildren && (isExpanded || isMobile) && (
+        {hasChildren && (isItemExpanded || isMobile) && (
           <AnimatePresence>
-            {isExpanded && (
+            {isItemExpanded && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}

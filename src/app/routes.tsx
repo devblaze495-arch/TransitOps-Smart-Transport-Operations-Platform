@@ -1,16 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LoginPage } from '../features/auth/LoginPage';
+import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { VehicleListPage } from '../features/vehicles/VehicleListPage';
+import { VehicleDetailsPage } from '../features/vehicles/VehicleDetailsPage';
+import { VehicleFormPage } from '../features/vehicles/VehicleFormPage';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { DashboardLayout } from '../layouts/DashboardLayout';
-
-function DashboardPage() {
-  return (
-    <div className="p-6">
-      <h1 className="mb-2 text-2xl font-semibold text-text-primary">Dashboard</h1>
-      <p className="text-text-secondary">Welcome to FleetPro Dashboard</p>
-    </div>
-  );
-}
 
 export function AppRoutes() {
   return (
@@ -28,6 +23,13 @@ export function AppRoutes() {
 
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<DashboardPage />} />
+      </Route>
+
+      <Route path="/vehicles" element={<DashboardLayout />}>
+        <Route index element={<VehicleListPage />} />
+        <Route path="new" element={<VehicleFormPage />} />
+        <Route path=":id" element={<VehicleDetailsPage />} />
+        <Route path=":id/edit" element={<VehicleFormPage />} />
       </Route>
     </Routes>
   );
